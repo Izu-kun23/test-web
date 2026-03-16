@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/events/page": "app/events/page.js",
+  "/gallery/page": "app/gallery/page.js",
+  "/offers/page": "app/offers/page.js",
+  "/page": "app/page.js",
+  "/reservations/page": "app/reservations/page.js",
+  "/restaurants/page": "app/restaurants/page.js"
+}

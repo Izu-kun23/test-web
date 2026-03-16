@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  /* Roots Manchester — dark earthy palette */
+  --color-bg: #0d0d0c;
+  --color-surface: #161614;
+  --color-charcoal: #1c1b19;
+  --color-deep-green: #1a2e28;
+  --color-bronze: #a67c52;
+  --color-bronze-light: #c49a6c;
+  --color-heading: rgba(255, 255, 255, 0.92);
+  --color-body: rgba(255, 255, 255, 0.65);
+  --color-muted: rgba(255, 255, 255, 0.45);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Cormorant Garamond", "Georgia", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Serif headlines */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  color: var(--color-heading);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+/* Glass-morphism */
+.glass {
+  background: rgba(13, 13, 12, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Grain overlay */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///Users/admin/Desktop/roots/src/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <main style={{ padding: \"2rem\", maxWidth: \"60ch\", margin: \"0 auto\" }}>\n      <h1>Welcome to Roots</h1>\n      <p>Next.js with Bun and src folder structure is ready.</p>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,8OAAC;QAAK,OAAO;YAAE,SAAS;YAAQ,UAAU;YAAQ,QAAQ;QAAS;;0BACjE,8OAAC;0BAAG;;;;;;0BACJ,8OAAC;0BAAE;;;;;;;;;;;;AAGT"}}]
+}
