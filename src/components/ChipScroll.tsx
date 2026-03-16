@@ -26,57 +26,64 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-async function detectFrameCount(): Promise<number> {
-  let count = 0;
-  for (let i = 1; i <= 500; i++) {
-    try {
-      await loadImage(`${SEQUENCE_BASE}${pad3(i)}${SEQUENCE_EXT}`);
-      count = i;
-    } catch {
-      break;
-    }
-  }
-  return count;
-}
 
-async function preloadFrames(count: number): Promise<HTMLImageElement[]> {
-  const promises = Array.from({ length: count }, (_, i) =>
-    loadImage(frameSrc(i))
-  );
-  return Promise.all(promises);
-}
+const TOTAL_FRAMES = 240;
 
-function useFrameImages(totalFrames: number) {
+function useFrameImages() {
   const [frames, setFrames] = useState<HTMLImageElement[]>([]);
   const [ready, setReady] = useState(false);
   const [sampledBg, setSampledBg] = useState(FALLBACK_BG);
 
   useEffect(() => {
-    if (totalFrames === 0) {
-      setReady(true);
-      return;
-    }
     let cancelled = false;
-    preloadFrames(totalFrames).then((loaded) => {
+    
+    // 1. Load the first frame immediately to get background color and initial view
+    loadImage(frameSrc(0)).then((firstImg) => {
       if (cancelled) return;
-      setFrames(loaded);
-      if (loaded[0]) {
-        const canvas = document.createElement("canvas");
-        canvas.width = 1;
-        canvas.height = 1;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(loaded[0], 0, 0, 1, 1);
-          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-          setSampledBg(`rgb(${r},${g},${b})`);
-        }
+      
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(firstImg, 0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        setSampledBg(`rgb(${r},${g},${b})`);
       }
+      
+      // We are "ready" once the first frame is here
       setReady(true);
+      
+      // 2. Load the rest in chunks to avoid slamming the network
+      const allFrames = new Array(TOTAL_FRAMES);
+      allFrames[0] = firstImg;
+      setFrames([...allFrames]);
+
+      const loadRest = async () => {
+        // Load in batches of 10
+        const batchSize = 10;
+        for (let i = 1; i < TOTAL_FRAMES; i += batchSize) {
+          if (cancelled) break;
+          const end = Math.min(i + batchSize, TOTAL_FRAMES);
+          const promises = [];
+          for (let j = i; j < end; j++) {
+            promises.push(loadImage(frameSrc(j)).then(img => ({ img, j })));
+          }
+          const results = await Promise.all(promises);
+          results.forEach(({ img, j }) => {
+            allFrames[j] = img;
+          });
+          setFrames([...allFrames]);
+        }
+      };
+      
+      loadRest();
     });
+
     return () => {
       cancelled = true;
     };
-  }, [totalFrames]);
+  }, []);
 
   return { frames, ready, sampledBg };
 }
@@ -215,26 +222,20 @@ export default function ChipScroll({
   onReady?: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [frameCount, setFrameCount] = useState(0);
-
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  const frameIndex = useTransform(scrollYProgress, [0, 1], [0, Math.max(frameCount - 1, 0)]);
+  const frameIndex = useTransform(scrollYProgress, [0, 1], [0, TOTAL_FRAMES - 1]);
   const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    detectFrameCount().then(setFrameCount);
-  }, []);
 
   useEffect(() => {
     const unsub = frameIndex.on("change", (v) => setIndex(Math.round(v)));
     return () => unsub();
-  }, [frameIndex, frameCount]);
+  }, [frameIndex]);
 
-  const { frames, ready, sampledBg } = useFrameImages(frameCount);
+  const { frames, ready, sampledBg } = useFrameImages();
   const progress = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const [progressValue, setProgressValue] = useState(0);
   useEffect(() => {
@@ -257,10 +258,10 @@ export default function ChipScroll({
       >
         <div
           className="sticky top-0 h-screen w-full overflow-hidden"
-          style={{ background: frameCount > 0 ? sampledBg : FALLBACK_BG }}
+          style={{ background: TOTAL_FRAMES > 0 ? sampledBg : FALLBACK_BG }}
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            {frameCount > 0 ? (
+            {TOTAL_FRAMES > 0 ? (
               <CanvasFrame
                 frameIndex={Math.min(index, frames.length - 1)}
                 images={frames}
